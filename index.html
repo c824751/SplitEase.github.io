@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SplitEase - 輕鬆分帳</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- HTML2Canvas for image generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #007AFF;
+      --secondary-color: #5AC8FA;
+      --success-color: #34C759;
+      --warning-color: #FF9500;
+      --danger-color: #FF3B30;
+      --background-color: #F2F2F7;
+      --card-background: #FFFFFF;
+      --text-color: #1C1C1E;
+      --text-secondary: #8E8E93;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    
+    .app-container {
+      max-width: 100%;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .app-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0;
+      flex: 1;
+    }
+    
+    .save-button {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .save-button:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .content {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      max-width: 500px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 30px 0;
+      color: var(--text-secondary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 150px;
+      width: 100%;
+      background-color: #F9F9F9;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .empty-state i {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state p {
+      margin: 0;
+      font-size: 14px;
+    }
+    
+    .card {
+      background-color: var(--card-background);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    
+    .action-bar {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+      width: 100%;
+    }
+    
+    .btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 20px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 120px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+    
+    .btn-secondary {
+      background-color: #E9E9EB;
+      color: var(--text-color);
+    }
+    
+    .btn-secondary:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-success {
+      background-color: var(--success-color);
+    }
+    
+    .btn-success:hover {
+      box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+    }
+    
+    .navigation {
+      display: flex;
+      background-color: var(--card-background);
+      border-radius: 16px;
+      padding: 5px;
+      margin: 0 auto;
+      max-width: 500px;
+      width: 100%;
+      justify-content: space-around;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+    }
+    
+    .nav-item.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    
+    .nav-item i {
+      font-size: 20px;
+      margin-bottom: 5px;
+      display: block;
+    }
+    
+    .nav-item span {
+      font-size: 12px;
+      display: block;
+    }
+    
+    .tab-content {
+      display: none;
+      width: 100%;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .list-container {
+      margin-top: 20px;
+      width: 100%;
+    }
+    
+    .list-item {
+      background-color: #F9F9F9;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+      position: relative;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .list-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    
+    .avatar-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: 500;
+      font-size: 18px;
+    }
+    
+    .list-item-content {
+      flex: 1;
+    }
+    
+    .list-item-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .list-item-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    .list-item-amount {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+    
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    
+    .modal-backdrop.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal {
+      background-color: var(--card-background);
+      border-radius: 16px;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: all 0.3s;
+    }
+    
+    .modal-backdrop.show .modal {
+      transform: translateY(0);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #D1D1D6;
+      border-radius: 12px;
+      font-size: 16px;
+      background-color: #FFFFFF;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 1001;
+      pointer-events: none;
+    }
+    
+    .notification.show {
+      opacity: 1;
+    }
+    
+    .color-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .color-option {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .color-option:hover {
+      transform: scale(1.1);
+    }
+    
+    .color-option.selected {
+      box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary-color);
+    }
+    
+    .json-data {
+      background-color: #F0F0F0;
+      border-radius: 12px;
+      padding: 15px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      font-size: 12px;
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    
+    #resultImage {
+      max-width: 100%;
+      border-radius: 12px;
+      margin-top: 15px;
+    }
+    
+    .participant-count {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: rgba(0, 122, 255, 0.1);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 200px;
+    }
+    
+    .participant-count h2 {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+    
+    .participant-count p {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin: 0;
+    }
+    
+    .count-display {
+      display: flex;
+      background-color: var(--card-background);
+      border-radius: 16px;
+      padding: 10px;
+      margin: 10px auto;
+      max-width: 500px;
+      width: 100%;
+      justify-content: space-around;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .count-item {
+      text-align: center;
+      padding: 8px;
+      border-radius: 12px;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+      flex: 1;
+    }
+    
+    .count-item i {
+      font-size: 20px;
+      margin-bottom: 5px;
+      display: block;
+    }
+    
+    .count-item span {
+      font-size: 12px;
+      display: block;
+    }
+    
+    .count-item .count-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-top: 5px;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    /* RWD Styles */
+    @media (max-width: 480px) {
+      .app-container {
+        padding: 0;
+      }
+      
+      .header {
+        padding: 12px;
+      }
+      
+      .app-title {
+        font-size: 20px;
+      }
+      
+      .save-button {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+      
+      .content {
+        padding: 15px;
+      }
+      
+      .navigation, .count-display {
+        padding: 3px;
+      }
+      
+      .nav-item, .count-item {
+        padding: 8px;
+      }
+      
+      .nav-item i, .count-item i {
+        font-size: 18px;
+      }
+      
+      .nav-item span, .count-item span {
+        font-size: 11px;
+      }
+      
+      .count-item .count-value {
+        font-size: 16px;
+      }
+      
+      .card {
+        padding: 15px;
+      }
+      
+      .btn {
+        padding: 10px 16px;
+        font-size: 14px;
+        min-width: 100px;
+      }
+      
+      .list-item {
+        padding: 12px;
+      }
+      
+      .avatar-circle {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+      }
+      
+      .list-item-title {
+        font-size: 14px;
+      }
+      
+      .list-item-subtitle {
+        font-size: 12px;
+      }
+      
+      .list-item-amount {
+        font-size: 14px;
+      }
+      
+      .modal {
+        width: 95%;
+        padding: 15px;
+      }
+      
+      .form-control {
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+      
+      .checkbox-group {
+        gap: 8px;
+      }
+      
+      .checkbox-item {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="header">
+      <h1 class="app-title" style="text-align: left;">算帳達人</h1>
+      <div style="display: flex; gap: 10px;">
+        <button id="helpBtn" class="save-button">
+          <i class="fas fa-question-circle"></i>
+          說明
+        </button>
+        <button id="saveDataBtn" class="save-button">
+          <i class="fas fa-save"></i>
+          儲存
+        </button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="navigation">
+        <div class="nav-item active" data-tab="people">
+          <i class="fas fa-users"></i>
+          <span>參與者</span>
+        </div>
+        <div class="nav-item" data-tab="expenses">
+          <i class="fas fa-receipt"></i>
+          <span>帳單</span>
+        </div>
+        <div class="nav-item" data-tab="results">
+          <i class="fas fa-calculator"></i>
+          <span>結算</span>
+        </div>
+      </div>
+      
+      <div class="count-display">
+        <div class="count-item">
+          <i class="fas fa-users"></i>
+          <span>參與人數</span>
+          <div class="count-value" id="peopleCount">0</div>
+        </div>
+        <div class="count-item">
+          <i class="fas fa-dollar-sign"></i>
+          <span>總金額</span>
+          <div class="count-value" id="totalAmount">0</div>
+        </div>
+        <div class="count-item">
+          <i class="fas fa-chart-line"></i>
+          <span>人均消費</span>
+          <div class="count-value" id="averageAmount">0</div>
+        </div>
+      </div>
+      
+      <!-- 參與者頁面 -->
+      <div id="peopleTab" class="tab-content active">
+        <div class="card">
+          <div class="empty-state" id="emptyParticipants">
+            <i class="fas fa-user-plus"></i>
+            <p>請添加參與分帳的成員</p>
+          </div>
+          
+          <div id="participantsList" class="list-container">
+            <!-- 參與者清單將在這裡顯示 -->
+          </div>
+          
+          <div class="action-bar">
+            <button id="addParticipantBtn" class="btn">
+              <i class="fas fa-plus"></i> 新增成員
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 帳單頁面 -->
+      <div id="expensesTab" class="tab-content">
+        <div class="card">
+          <div class="empty-state" id="emptyExpenses">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <p>暫無費用項目，請添加</p>
+          </div>
+          
+          <div id="expensesList" class="list-container">
+            <!-- 帳單清單將在這裡顯示 -->
+          </div>
+          
+          <div class="action-bar">
+            <button id="addExpenseBtn" class="btn">
+              <i class="fas fa-plus"></i> 新增帳單
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 結算頁面 -->
+      <div id="resultsTab" class="tab-content">
+        <div class="card">
+          <div class="empty-state" id="emptyResults">
+            <i class="fas fa-coins"></i>
+            <p>請先添加參與者和費用項目</p>
+          </div>
+          
+          <div id="resultDetail" class="list-container hidden">
+            <h3>費用總覽</h3>
+            <div id="expenseSummary" class="summary-section">
+              <!-- 費用總覽將在這裡顯示 -->
+            </div>
+            
+            <h3 style="margin-top: 20px;">個人明細</h3>
+            <div id="personalSummary" class="summary-section">
+              <!-- 個人明細將在這裡顯示 -->
+            </div>
+            
+            <h3 style="margin-top: 20px;">轉帳建議</h3>
+            <div id="transactionSuggestions" class="summary-section">
+              <!-- 轉帳建議將在這裡顯示 -->
+            </div>
+          </div>
+          
+          <div class="action-bar">
+            <button id="calculateBtn" class="btn btn-success">
+              <i class="fas fa-calculator"></i> 開始結算
+            </button>
+            <button id="generateImageBtn" class="btn hidden">
+              <i class="fas fa-image"></i> 產生圖片
+            </button>
+          </div>
+        </div>
+        
+        <div id="resultImageCard" class="card hidden">
+          <h3>結算明細圖片</h3>
+          <div id="imageContainer">
+            <img id="resultImage" src="" alt="結算明細">
+          </div>
+          <div class="action-bar">
+            <button id="downloadImageBtn" class="btn btn-success">
+              <i class="fas fa-download"></i> 下載圖片
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 新增參與者模態框 -->
+  <div id="addParticipantModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">新增參與者</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      
+      <form id="addParticipantForm">
+        <div class="form-group">
+          <label class="form-label" for="participantName">姓名</label>
+          <input type="text" id="participantName" class="form-control" placeholder="請輸入姓名" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">選擇顏色</label>
+          <div class="color-options">
+            <div class="color-option selected" style="background-color: #007AFF;" data-color="#007AFF"></div>
+            <div class="color-option" style="background-color: #5AC8FA;" data-color="#5AC8FA"></div>
+            <div class="color-option" style="background-color: #34C759;" data-color="#34C759"></div>
+            <div class="color-option" style="background-color: #FF9500;" data-color="#FF9500"></div>
+            <div class="color-option" style="background-color: #FF3B30;" data-color="#FF3B30"></div>
+            <div class="color-option" style="background-color: #AF52DE;" data-color="#AF52DE"></div>
+            <div class="color-option" style="background-color: #FF2D55;" data-color="#FF2D55"></div>
+            <div class="color-option" style="background-color: #5856D6;" data-color="#5856D6"></div>
+          </div>
+          <input type="hidden" id="participantColor" value="#007AFF">
+        </div>
+        
+        <div class="action-bar">
+          <button type="submit" class="btn btn-success">確定</button>
+          <button type="button" class="btn btn-secondary modal-cancel">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 新增帳單模態框 -->
+  <div id="addExpenseModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">新增帳單</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      
+      <form id="addExpenseForm">
+        <div class="form-group">
+          <label class="form-label" for="expenseName">項目名稱</label>
+          <input type="text" id="expenseName" class="form-control" placeholder="例如：晚餐、電影票" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="expenseAmount">金額</label>
+          <input type="number" id="expenseAmount" class="form-control" placeholder="請輸入金額" min="0" step="0.01" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="expensePayer">付款人</label>
+          <select id="expensePayer" class="form-control" required>
+            <option value="" disabled selected>請選擇付款人</option>
+            <!-- 參與者選項將動態添加 -->
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">分攤成員</label>
+          <div id="expenseSplitMembers" class="checkbox-group">
+            <!-- 分攤成員選項將動態添加 -->
+          </div>
+        </div>
+        
+        <div class="action-bar">
+          <button type="submit" class="btn btn-success">確定</button>
+          <button type="button" class="btn btn-secondary modal-cancel">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 數據管理模態框 -->
+  <div id="dataModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">數據管理</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      
+      <div>
+        <p>複製以下 JSON 數據以備份或分享給他人：</p>
+        <div id="jsonDataDisplay" class="json-data"></div>
+        <div class="action-bar">
+          <button id="copyJsonBtn" class="btn">
+            <i class="fas fa-copy"></i> 複製
+          </button>
+        </div>
+      </div>
+      
+      <div style="margin-top: 20px;">
+        <p>或者貼上 JSON 數據以恢復之前的紀錄：</p>
+        <textarea id="jsonDataInput" class="form-control" rows="5" placeholder="請貼上 JSON 數據"></textarea>
+        <div class="action-bar">
+          <button id="loadJsonBtn" class="btn btn-success">
+            <i class="fas fa-upload"></i> 載入數據
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 使用說明模態框 -->
+  <div id="helpModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">使用說明</div>
+        <button class="modal-close">&times;</button>
+      </div>
+      
+      <div style="padding: 10px;">
+        <h3 style="margin-bottom: 15px;">基本操作</h3>
+        <div style="margin-bottom: 20px;">
+          <p style="margin-bottom: 10px;"><strong>1. 新增參與者</strong></p>
+          <p style="margin-bottom: 10px;">• 點擊「新增成員」按鈕</p>
+          <p style="margin-bottom: 10px;">• 輸入姓名並選擇顏色</p>
+          <p style="margin-bottom: 10px;">• 點擊「確定」完成新增</p>
+        </div>
+        
+        <h3 style="margin-bottom: 15px;">新增帳單</h3>
+        <div style="margin-bottom: 20px;">
+          <p style="margin-bottom: 10px;"><strong>2. 新增帳單</strong></p>
+          <p style="margin-bottom: 10px;">• 點擊「新增帳單」按鈕</p>
+          <p style="margin-bottom: 10px;">• 輸入項目名稱和金額</p>
+          <p style="margin-bottom: 10px;">• 選擇付款人</p>
+          <p style="margin-bottom: 10px;">• 選擇分攤成員</p>
+          <p style="margin-bottom: 10px;">• 點擊「確定」完成新增</p>
+        </div>
+        
+        <h3 style="margin-bottom: 15px;">結算功能</h3>
+        <div style="margin-bottom: 20px;">
+          <p style="margin-bottom: 10px;"><strong>3. 結算帳單</strong></p>
+          <p style="margin-bottom: 10px;">• 點擊「開始結算」按鈕</p>
+          <p style="margin-bottom: 10px;">• 查看費用總覽、個人明細和轉帳建議</p>
+          <p style="margin-bottom: 10px;">• 點擊「產生圖片」可生成結算明細圖片</p>
+          <p style="margin-bottom: 10px;">• 點擊「下載圖片」可保存結算明細</p>
+        </div>
+        
+        <h3 style="margin-bottom: 15px;">數據管理</h3>
+        <div style="margin-bottom: 20px;">
+          <p style="margin-bottom: 10px;"><strong>4. 儲存與載入</strong></p>
+          <p style="margin-bottom: 10px;">• 點擊「儲存數據」可查看當前數據</p>
+          <p style="margin-bottom: 10px;">• 複製 JSON 數據可備份或分享</p>
+          <p style="margin-bottom: 10px;">• 貼上 JSON 數據可恢復之前的紀錄</p>
+        </div>
+        
+        <h3 style="margin-bottom: 15px;">注意事項</h3>
+        <div>
+          <p style="margin-bottom: 10px;">• 所有金額將自動無條件進位</p>
+          <p style="margin-bottom: 10px;">• 已有相關費用記錄的成員無法刪除</p>
+          <p style="margin-bottom: 10px;">• 結算結果會自動計算最優轉帳方案</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="notification" class="notification"></div>
+  
+  <script>
+    // Global variables
+    let participants = [];
+    let expenses = [];
+    
+    // DOM Elements
+    const peopleTab = document.getElementById('peopleTab');
+    const expensesTab = document.getElementById('expensesTab');
+    const resultsTab = document.getElementById('resultsTab');
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    const participantsList = document.getElementById('participantsList');
+    const emptyParticipants = document.getElementById('emptyParticipants');
+    const addParticipantBtn = document.getElementById('addParticipantBtn');
+    const addParticipantModal = document.getElementById('addParticipantModal');
+    const addParticipantForm = document.getElementById('addParticipantForm');
+    const peopleCount = document.getElementById('peopleCount');
+    
+    const expensesList = document.getElementById('expensesList');
+    const emptyExpenses = document.getElementById('emptyExpenses');
+    const addExpenseBtn = document.getElementById('addExpenseBtn');
+    const addExpenseModal = document.getElementById('addExpenseModal');
+    const addExpenseForm = document.getElementById('addExpenseForm');
+    const totalAmount = document.getElementById('totalAmount');
+    
+    const resultDetail = document.getElementById('resultDetail');
+    const emptyResults = document.getElementById('emptyResults');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const generateImageBtn = document.getElementById('generateImageBtn');
+    const resultImageCard = document.getElementById('resultImageCard');
+    const averageAmount = document.getElementById('averageAmount');
+    
+    const saveDataBtn = document.getElementById('saveDataBtn');
+    const dataModal = document.getElementById('dataModal');
+    const jsonDataDisplay = document.getElementById('jsonDataDisplay');
+    const jsonDataInput = document.getElementById('jsonDataInput');
+    const copyJsonBtn = document.getElementById('copyJsonBtn');
+    const loadJsonBtn = document.getElementById('loadJsonBtn');
+    
+    const notification = document.getElementById('notification');
+    
+    const helpBtn = document.getElementById('helpBtn');
+    const helpModal = document.getElementById('helpModal');
+    
+    // Utility functions
+    function showNotification(message) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 2000);
+    }
+    
+    function updateEmptyStates() {
+      if (participants.length > 0) {
+        emptyParticipants.style.display = 'none';
+        participantsList.style.display = 'block';
+      } else {
+        emptyParticipants.style.display = 'block';
+        participantsList.style.display = 'none';
+      }
+      
+      if (expenses.length > 0) {
+        emptyExpenses.style.display = 'none';
+        expensesList.style.display = 'block';
+      } else {
+        emptyExpenses.style.display = 'block';
+        expensesList.style.display = 'none';
+      }
+      
+      if (participants.length > 0 && expenses.length > 0) {
+        emptyResults.style.display = 'none';
+        calculateBtn.style.display = 'block';
+      } else {
+        emptyResults.style.display = 'block';
+        calculateBtn.style.display = 'block';
+      }
+      
+      peopleCount.textContent = participants.length;
+      
+      let total = 0;
+      expenses.forEach(expense => {
+        total += Math.ceil(expense.amount);
+      });
+      totalAmount.textContent = total;
+      
+      if (participants.length > 0) {
+        averageAmount.textContent = Math.ceil(total / participants.length);
+      } else {
+        averageAmount.textContent = '0';
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Tab navigation
+      navItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const tab = item.getAttribute('data-tab');
+          
+          navItems.forEach(navItem => {
+            navItem.classList.remove('active');
+          });
+          item.classList.add('active');
+          
+          document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+          });
+          
+          document.getElementById(tab + 'Tab').classList.add('active');
+          
+          updateEmptyStates();
+        });
+      });
+      
+      // Close modal events
+      document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.modal-backdrop').forEach(modal => {
+            modal.classList.remove('show');
+          });
+        });
+      });
+      
+      // Color selection
+      const colorOptions = document.querySelectorAll('.color-option');
+      const participantColorInput = document.getElementById('participantColor');
+      
+      colorOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          colorOptions.forEach(opt => opt.classList.remove('selected'));
+          option.classList.add('selected');
+          participantColorInput.value = option.getAttribute('data-color');
+        });
+      });
+      
+      initializeEvents();
+      updateEmptyStates();
+    });
+    
+    function initializeEvents() {
+      // Add participant functionality
+      addParticipantBtn.addEventListener('click', () => {
+        addParticipantModal.classList.add('show');
+      });
+      
+      addParticipantForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('participantName').value.trim();
+        const color = document.getElementById('participantColor').value;
+        
+        if (name) {
+          const participant = {
+            id: Date.now().toString(),
+            name: name,
+            color: color
+          };
+          
+          participants.push(participant);
+          renderParticipants();
+          updateEmptyStates();
+          
+          addParticipantForm.reset();
+          document.querySelector('.color-option').click();
+          addParticipantModal.classList.remove('show');
+          
+          showNotification(`已新增參與者: ${name}`);
+        }
+      });
+      
+      // Save and load functionality
+      saveDataBtn.addEventListener('click', () => {
+        const appData = {
+          participants: participants,
+          expenses: expenses,
+          timestamp: new Date().toISOString()
+        };
+        
+        jsonDataDisplay.textContent = JSON.stringify(appData, null, 2);
+        dataModal.classList.add('show');
+      });
+      
+      copyJsonBtn.addEventListener('click', () => {
+        const jsonText = jsonDataDisplay.textContent;
+        navigator.clipboard.writeText(jsonText)
+          .then(() => {
+            showNotification('已複製到剪貼簿');
+          })
+          .catch(err => {
+            console.error('無法複製: ', err);
+            showNotification('複製失敗');
+          });
+      });
+      
+      loadJsonBtn.addEventListener('click', () => {
+        const jsonText = jsonDataInput.value.trim();
+        
+        if (!jsonText) {
+          showNotification('請輸入 JSON 數據');
+          return;
+        }
+        
+        try {
+          const appData = JSON.parse(jsonText);
+          
+          if (appData.participants && appData.expenses) {
+            participants = appData.participants;
+            expenses = appData.expenses;
+            
+            renderParticipants();
+            renderExpenses();
+            updateEmptyStates();
+            
+            dataModal.classList.remove('show');
+            jsonDataInput.value = '';
+            
+            showNotification('數據載入成功');
+          } else {
+            showNotification('數據格式錯誤');
+          }
+        } catch (err) {
+          console.error('解析 JSON 錯誤: ', err);
+          showNotification('JSON 格式錯誤');
+        }
+      });
+      
+      // Add expense functionality
+      addExpenseBtn.addEventListener('click', () => {
+        if (participants.length === 0) {
+          showNotification('請先新增參與者');
+          return;
+        }
+        
+        // Fill the payer select
+        const expensePayer = document.getElementById('expensePayer');
+        expensePayer.innerHTML = '<option value="" disabled selected>請選擇付款人</option>';
+        participants.forEach(participant => {
+          expensePayer.innerHTML += `<option value="${participant.id}">${participant.name}</option>`;
+        });
+        
+        // Fill the split members checkboxes
+        const expenseSplitMembers = document.getElementById('expenseSplitMembers');
+        expenseSplitMembers.innerHTML = '';
+        participants.forEach(participant => {
+          expenseSplitMembers.innerHTML += `
+            <div class="checkbox-item">
+              <input type="checkbox" id="split_${participant.id}" name="splitMembers" value="${participant.id}" checked>
+              <label for="split_${participant.id}">${participant.name}</label>
+            </div>
+          `;
+        });
+        
+        addExpenseModal.classList.add('show');
+      });
+      
+      addExpenseForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('expenseName').value.trim();
+        const amount = parseFloat(document.getElementById('expenseAmount').value);
+        const payerId = document.getElementById('expensePayer').value;
+        
+        // Get selected split members
+        const splitMemberIds = [];
+        document.querySelectorAll('input[name="splitMembers"]:checked').forEach(checkbox => {
+          splitMemberIds.push(checkbox.value);
+        });
+        
+        if (name && amount && payerId && splitMemberIds.length > 0) {
+          const expense = {
+            id: Date.now().toString(),
+            name: name,
+            amount: amount,
+            payerId: payerId,
+            splitMemberIds: splitMemberIds
+          };
+          
+          expenses.push(expense);
+          renderExpenses();
+          updateEmptyStates();
+          
+          addExpenseForm.reset();
+          addExpenseModal.classList.remove('show');
+          
+          showNotification(`已新增帳單: ${name}`);
+        }
+      });
+      
+      // Calculate results functionality
+      calculateBtn.addEventListener('click', () => {
+        if (participants.length === 0 || expenses.length === 0) {
+          showNotification('請先添加參與者和費用項目');
+          return;
+        }
+        
+        calculateResults();
+        resultDetail.classList.remove('hidden');
+        generateImageBtn.classList.remove('hidden');
+        emptyResults.style.display = 'none';
+        resultImageCard.classList.add('hidden');
+      });
+      
+      generateImageBtn.addEventListener('click', () => {
+        generateResultImage();
+        resultImageCard.classList.remove('hidden');
+      });
+      
+      document.getElementById('downloadImageBtn').addEventListener('click', () => {
+        downloadResultImage();
+      });
+      
+      // Help button functionality
+      helpBtn.addEventListener('click', () => {
+        helpModal.classList.add('show');
+      });
+    }
+    
+    function renderParticipants() {
+      participantsList.innerHTML = '';
+      
+      participants.forEach(participant => {
+        const listItem = document.createElement('div');
+        listItem.className = 'list-item';
+        
+        const firstLetter = participant.name.charAt(0).toUpperCase();
+        
+        listItem.innerHTML = `
+          <div class="avatar-circle" style="background-color: ${participant.color}">
+            ${firstLetter}
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-title">${participant.name}</div>
+          </div>
+          <button class="btn-delete" data-id="${participant.id}">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        
+        participantsList.appendChild(listItem);
+      });
+      
+      // Add delete event listeners
+      document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          deleteParticipant(id);
+        });
+      });
+    }
+    
+    function deleteParticipant(id) {
+      // Check if participant is used in expenses
+      const isUsed = expenses.some(expense => {
+        return expense.payerId === id || expense.splitMemberIds.includes(id);
+      });
+      
+      if (isUsed) {
+        showNotification('此成員已有相關費用記錄，無法刪除');
+        return;
+      }
+      
+      participants = participants.filter(p => p.id !== id);
+      renderParticipants();
+      updateEmptyStates();
+    }
+    
+    function renderExpenses() {
+      expensesList.innerHTML = '';
+      
+      expenses.forEach(expense => {
+        const payer = participants.find(p => p.id === expense.payerId);
+        if (!payer) return;
+        
+        const listItem = document.createElement('div');
+        listItem.className = 'list-item';
+        
+        // Get split members names
+        const splitMembers = expense.splitMemberIds
+          .map(id => participants.find(p => p.id === id)?.name)
+          .filter(Boolean);
+        
+        // Create split text
+        let splitText;
+        if (expense.splitMemberIds.length === participants.length) {
+          splitText = `分攤: ${splitMembers.join(', ')}`;
+        } else {
+          splitText = `分攤: ${splitMembers.join(', ')}`;
+        }
+        
+        listItem.innerHTML = `
+          <div class="avatar-circle" style="background-color: ${payer.color}">
+            ${payer.name.charAt(0).toUpperCase()}
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-title">${expense.name}</div>
+            <div class="list-item-subtitle">付款人: ${payer.name} | ${splitText}</div>
+          </div>
+          <div class="list-item-amount">$ ${Math.ceil(expense.amount)}</div>
+          <button class="btn-delete" data-id="${expense.id}">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        
+        expensesList.appendChild(listItem);
+      });
+      
+      // Add delete event listeners
+      document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          deleteExpense(id);
+        });
+      });
+    }
+    
+    function deleteExpense(id) {
+      expenses = expenses.filter(e => e.id !== id);
+      renderExpenses();
+      updateEmptyStates();
+    }
+    
+    function calculateResults() {
+      // Calculate who owes what to whom
+      const balances = {}; // Track what each person has paid vs. what they owe
+      
+      // Initialize balances
+      participants.forEach(participant => {
+        balances[participant.id] = {
+          paid: 0,
+          owed: 0,
+          name: participant.name,
+          color: participant.color
+        };
+      });
+      
+      // Calculate what each person has paid and what they owe
+      expenses.forEach(expense => {
+        const totalAmount = Math.ceil(expense.amount); // 無條件進位
+        const payerId = expense.payerId;
+        const splitMemberIds = expense.splitMemberIds;
+        const splitAmount = Math.ceil(totalAmount / splitMemberIds.length); // 無條件進位
+        
+        // Add to what the payer has paid
+        balances[payerId].paid += totalAmount;
+        
+        // Add to what each split member owes
+        splitMemberIds.forEach(memberId => {
+          balances[memberId].owed += splitAmount;
+        });
+      });
+      
+      // Calculate final balances
+      const finalBalances = [];
+      participants.forEach(participant => {
+        const balance = balances[participant.id];
+        const netBalance = balance.paid - balance.owed;
+        
+        finalBalances.push({
+          id: participant.id,
+          name: participant.name,
+          color: participant.color,
+          paid: balance.paid,
+          owed: balance.owed,
+          netBalance: netBalance
+        });
+      });
+      
+      // Create debts (who pays whom)
+      const debts = [];
+      
+      // Sort by net balance (negative means they owe money, positive means they are owed money)
+      const sortedBalances = [...finalBalances].sort((a, b) => a.netBalance - b.netBalance);
+      
+      let i = 0; // index of person who owes money (negative balance)
+      let j = sortedBalances.length - 1; // index of person who is owed money (positive balance)
+      
+      while (i < j) {
+        const debtor = sortedBalances[i];
+        const creditor = sortedBalances[j];
+        
+        if (Math.abs(debtor.netBalance) < 1) {
+          // Skip people with zero balance
+          i++;
+          continue;
+        }
+        
+        if (Math.abs(creditor.netBalance) < 1) {
+          // Skip people with zero balance
+          j--;
+          continue;
+        }
+        
+        // Calculate the amount to transfer (無條件進位)
+        const amount = Math.ceil(Math.min(Math.abs(debtor.netBalance), creditor.netBalance));
+        
+        if (amount > 0) {
+          debts.push({
+            from: debtor.id,
+            to: creditor.id,
+            fromName: debtor.name,
+            toName: creditor.name,
+            fromColor: debtor.color,
+            toColor: creditor.color,
+            amount: amount
+          });
+          
+          // Update balances
+          debtor.netBalance += amount;
+          creditor.netBalance -= amount;
+        }
+        
+        // Move to next person if their balance is settled
+        if (Math.abs(debtor.netBalance) < 1) {
+          i++;
+        }
+        
+        if (Math.abs(creditor.netBalance) < 1) {
+          j--;
+        }
+      }
+      
+      // Render results
+      renderResults(finalBalances, debts);
+    }
+    
+    function renderResults(balances, debts) {
+      // Expense summary
+      const expenseSummary = document.getElementById('expenseSummary');
+      expenseSummary.innerHTML = '';
+      
+      let totalExpense = 0;
+      expenses.forEach(expense => {
+        totalExpense += Math.ceil(expense.amount);
+      });
+      
+      expenseSummary.innerHTML = `
+        <div style="padding: 10px; display: flex; justify-content: space-between;">
+          <div>總消費金額</div>
+          <div>$ ${totalExpense}</div>
+        </div>
+        <div style="padding: 10px; display: flex; justify-content: space-between;">
+          <div>人均消費</div>
+          <div>$ ${Math.ceil(totalExpense / participants.length)}</div>
+        </div>
+        <div style="padding: 10px; display: flex; justify-content: space-between;">
+          <div>費用項目數</div>
+          <div>${expenses.length} 項</div>
+        </div>
+      `;
+      
+      // Personal summary
+      const personalSummary = document.getElementById('personalSummary');
+      personalSummary.innerHTML = '';
+      
+      balances.forEach(balance => {
+        const netBalance = balance.paid - balance.owed;
+        const netBalanceText = Math.abs(netBalance) < 1
+          ? '收支平衡'
+          : netBalance > 0 
+            ? `收回 $ ${netBalance}` 
+            : `需支付 $ ${Math.abs(netBalance)}`;
+            
+        personalSummary.innerHTML += `
+          <div style="padding: 10px; border-bottom: 1px solid #E5E5EA;">
+            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+              <div class="avatar-circle" style="background-color: ${balance.color}; width: 25px; height: 25px; font-size: 12px; margin-right: 8px;">
+                ${balance.name.charAt(0).toUpperCase()}
+              </div>
+              <div style="font-weight: 600;">${balance.name}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+              <div>支付總額</div>
+              <div>$ ${balance.paid}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+              <div>消費總額</div>
+              <div>$ ${balance.owed}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 5px; font-weight: 600;">
+              <div>結算結果</div>
+              <div>${netBalanceText}</div>
+            </div>
+          </div>
+        `;
+      });
+      
+      // Transaction suggestions
+      const transactionSuggestions = document.getElementById('transactionSuggestions');
+      transactionSuggestions.innerHTML = '';
+      
+      if (debts.length === 0) {
+        transactionSuggestions.innerHTML = `
+          <div style="padding: 10px; text-align: center; color: var(--text-secondary);">
+            所有成員收支平衡，無需轉帳
+          </div>
+        `;
+      } else {
+        debts.forEach(debt => {
+          transactionSuggestions.innerHTML += `
+            <div style="padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E5E5EA;">
+              <div style="display: flex; align-items: center;">
+                <div class="avatar-circle" style="background-color: ${debt.fromColor}; width: 25px; height: 25px; font-size: 12px;">
+                  ${debt.fromName.charAt(0).toUpperCase()}
+                </div>
+                <div style="margin: 0 8px;">→</div>
+                <div class="avatar-circle" style="background-color: ${debt.toColor}; width: 25px; height: 25px; font-size: 12px;">
+                  ${debt.toName.charAt(0).toUpperCase()}
+                </div>
+              </div>
+              <div style="font-weight: 600;">$ ${debt.amount}</div>
+            </div>
+          `;
+        });
+      }
+    }
+    
+    function generateResultImage() {
+      const element = document.createElement('div');
+      element.style.padding = '20px';
+      element.style.backgroundColor = 'white';
+      element.style.borderRadius = '12px';
+      element.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+      element.style.maxWidth = '500px';
+      element.style.margin = '0 auto';
+      
+      element.innerHTML = `
+        <h1 style="text-align: center; margin-bottom: 20px; color: #007AFF;">SplitEase - 結算明細</h1>
+        
+        <h2 style="margin-bottom: 10px; color: #1C1C1E;">費用總覽</h2>
+        ${document.getElementById('expenseSummary').innerHTML}
+        
+        <h2 style="margin: 20px 0 10px; color: #1C1C1E;">個人明細</h2>
+        ${document.getElementById('personalSummary').innerHTML}
+        
+        <h2 style="margin: 20px 0 10px; color: #1C1C1E;">轉帳建議</h2>
+        ${document.getElementById('transactionSuggestions').innerHTML}
+      `;
+      
+      document.body.appendChild(element);
+      
+      html2canvas(element, {
+        backgroundColor: '#F2F2F7'
+      }).then(canvas => {
+        const imgData = canvas.toDataURL('image/jpeg');
+        document.getElementById('resultImage').src = imgData;
+        
+        document.body.removeChild(element);
+        showNotification('圖片已生成');
+      });
+    }
+    
+    function downloadResultImage() {
+      const link = document.createElement('a');
+      link.download = 'SplitEase結算明細.jpg';
+      link.href = document.getElementById('resultImage').src;
+      link.click();
+    }
+  </script>
+</body>
+</html> 
