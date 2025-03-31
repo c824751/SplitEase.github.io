@@ -708,18 +708,6 @@
               <i class="fas fa-calculator"></i> 開始結算
             </button>
             <button id="generateImageBtn" class="btn hidden">
-              <i class="fas fa-image"></i> 產生圖片
-            </button>
-          </div>
-        </div>
-        
-        <div id="resultImageCard" class="card hidden">
-          <h3>結算明細圖片</h3>
-          <div id="imageContainer">
-            <img id="resultImage" src="" alt="結算明細">
-          </div>
-          <div class="action-bar">
-            <button id="downloadImageBtn" class="btn btn-success">
               <i class="fas fa-download"></i> 下載圖片
             </button>
           </div>
@@ -869,7 +857,6 @@
           <p style="margin-bottom: 10px;"><strong>3. 結算帳單</strong></p>
           <p style="margin-bottom: 10px;">• 點擊「開始結算」按鈕</p>
           <p style="margin-bottom: 10px;">• 查看費用總覽、個人明細和轉帳建議</p>
-          <p style="margin-bottom: 10px;">• 點擊「產生圖片」可生成結算明細圖片</p>
           <p style="margin-bottom: 10px;">• 點擊「下載圖片」可保存結算明細</p>
         </div>
         
@@ -922,7 +909,6 @@
     const emptyResults = document.getElementById('emptyResults');
     const calculateBtn = document.getElementById('calculateBtn');
     const generateImageBtn = document.getElementById('generateImageBtn');
-    const resultImageCard = document.getElementById('resultImageCard');
     const averageAmount = document.getElementById('averageAmount');
     
     const saveDataBtn = document.getElementById('saveDataBtn');
@@ -1193,21 +1179,10 @@
         resultDetail.classList.remove('hidden');
         generateImageBtn.classList.remove('hidden');
         emptyResults.style.display = 'none';
-        resultImageCard.classList.add('hidden');
       });
       
       generateImageBtn.addEventListener('click', () => {
-        generateResultImage();
-        resultImageCard.classList.remove('hidden');
-      });
-      
-      document.getElementById('downloadImageBtn').addEventListener('click', () => {
-        downloadResultImage();
-      });
-      
-      // Help button functionality
-      helpBtn.addEventListener('click', () => {
-        helpModal.classList.add('show');
+        generateAndDownloadImage();
       });
     }
     
@@ -1510,7 +1485,7 @@
       }
     }
     
-    function generateResultImage() {
+    function generateAndDownloadImage() {
       const element = document.createElement('div');
       element.style.padding = '20px';
       element.style.backgroundColor = 'white';
@@ -1538,18 +1513,14 @@
         backgroundColor: '#F2F2F7'
       }).then(canvas => {
         const imgData = canvas.toDataURL('image/jpeg');
-        document.getElementById('resultImage').src = imgData;
+        const link = document.createElement('a');
+        link.download = 'SplitEase結算明細.jpg';
+        link.href = imgData;
+        link.click();
         
         document.body.removeChild(element);
-        showNotification('圖片已生成');
+        showNotification('圖片已下載');
       });
-    }
-    
-    function downloadResultImage() {
-      const link = document.createElement('a');
-      link.download = 'SplitEase結算明細.jpg';
-      link.href = document.getElementById('resultImage').src;
-      link.click();
     }
   </script>
 </body>
